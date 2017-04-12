@@ -85,9 +85,10 @@ def send_busy_status(user_name):
     global noReply, autoReplyFlag, timerSet
     print("Timer Working!")
     if noReply:
-        content = "您好,我是机器人小K,我的主人在认真地工作！\n让我先陪你聊一会吧!!!\n注意:以'小K:'\t开头的都是自动回复的哦(^o^)\n"
-        functions = '您可以使用下列功能:\n' + get_functions()
-        itchat.send(content + functions, user_name)
+        content = "您好,我是主人的机器人小K\n注意:以'小K:'\t开头的都是自动回复的哦(^o^)\n"
+        off_auto = r'如果不希望小K自动回复请在消息前面加上@符号' + '\n'
+        functions = '您可以回复: 所有功能 来查看小K的功能\n'
+        itchat.send(content + functions + off_auto, user_name)
         autoReplyFlag = True
         timerSet = False
 
@@ -194,12 +195,13 @@ def revocation(msg):
     msg_content = None  # 根据消息类型不同，消息内容不同
     msg_url = None  # 分享类消息有url
     # 图片 语音 附件 视频，可下载消息将内容下载暂存到当前目录
+    wx_msg_text = msg['Text']
     if msg['Type'] == 'Text':
 
-        msg_content = msg['Text']
+        msg_content = wx_msg_text
 
         global autoReplyFlag, timerSet, noReply, t  # 状态标志位
-        print(msg['Text'])
+        print(wx_msg_text)
         if is_msg_from_myself(msg['FromUserName']):
             print("Replied!!")
             autoReplyFlag = False
@@ -213,13 +215,19 @@ def revocation(msg):
             return None
 
         if autoReplyFlag:
-            # 为了保证在图灵Key出现问题的时候仍旧可以回复，这里设置一个默认回复
-            default_reply = 'I received: ' + msg['Text']
-            # 如果图灵Key出现问题，那么reply将会是None
-            reply = get_response(msg['Text'])
-            # a or b的意思是，如果a有内容，那么返回a，否则返回b
-            # 有内容一般就是指非空或者非None，你可以用`if a: print('True')`来测试
-            return '小K: ' + reply or '小K: ' + default_reply
+            # 查看功能
+            if wx_msg_text == '所有功能':
+                return '您可以使用下列功能:\n' + get_functions()
+            elif wx_msg_text[:1] == r'@':
+                print('do nothing')
+            else:
+                # 为了保证在图灵Key出现问题的时候仍旧可以回复，这里设置一个默认回复
+                default_reply = 'I received: ' + wx_msg_text
+                # 如果图灵Key出现问题，那么reply将会是None
+                reply = get_response(wx_msg_text)
+                # a or b的意思是，如果a有内容，那么返回a，否则返回b
+                # 有内容一般就是指非空或者非None，你可以用`if a: print('True')`来测试
+                return '小K: ' + reply or '小K: ' + default_reply
         else:
             noReply = True
             if not timerSet:
@@ -234,7 +242,7 @@ def revocation(msg):
 
         try:
             # 下载图片
-            msg['Text'](msg['FileName'])
+            wx_msg_text(msg['FileName'])
         except OSError:
             ''
     elif msg['Type'] == 'Card':
@@ -248,19 +256,19 @@ def revocation(msg):
         else:
             msg_content = r"" + location
     elif msg['Type'] == 'Sharing':
-        msg_content = msg['Text']
+        msg_content = wx_msg_text
         msg_url = msg['Url']
     elif msg['Type'] == 'Recording':
         msg_content = msg['FileName']
-        msg['Text'](msg['FileName'])
+        wx_msg_text(msg['FileName'])
     elif msg['Type'] == 'Attachment':
         msg_content = r"" + msg['FileName']
-        msg['Text'](msg['FileName'])
+        wx_msg_text(msg['FileName'])
     elif msg['Type'] == 'Video':
         msg_content = msg['FileName']
-        msg['Text'](msg['FileName'])
+        wx_msg_text(msg['FileName'])
     elif msg['Type'] == 'Friends':
-        msg_content = msg['Text']
+        msg_content = wx_msg_text
 
     # friend = itchat.search_friends(userName=msg['FromUserName'])
     # itchat.send(r"Friend:%s -- %s    "
