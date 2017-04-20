@@ -7,7 +7,7 @@ import os
 import re
 import shutil
 import time
-from functions import get_functions
+from functions import get_functions, get_example
 from threading import Timer
 
 from itchat.content import *
@@ -218,6 +218,8 @@ def revocation(msg):
             # 查看功能
             if wx_msg_text == '所有功能':
                 return '您可以使用下列功能:\n' + get_functions()
+            elif wx_msg_text[:1] == r'#':
+                return get_example(wx_msg_text[1:])
             elif wx_msg_text[:1] == r'@':
                 print('do nothing')
             else:
