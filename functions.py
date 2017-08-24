@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+AUTO_REPLAY = False
+
 functions = '回复 #+功能名称 , 获得使用示例\n' \
             '如: #天气查询 \n' \
             '【绕 口 令】,【顺 口 溜】\n' \

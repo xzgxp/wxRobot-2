@@ -7,7 +7,7 @@ import os
 import re
 import shutil
 import time
-from functions import get_functions, get_example
+from functions import get_functions, get_example, AUTO_REPLAY
 from threading import Timer
 
 from itchat.content import *
@@ -88,7 +88,8 @@ def send_busy_status(user_name):
         content = "您好,我是主人的机器人小K\n注意:以'小K:'\t开头的都是自动回复的哦(^o^)\n"
         off_auto = r'如果不希望小K自动回复请在消息前面加上@符号' + '\n'
         functions = '您可以回复: 所有功能 来查看小K的功能\n'
-        itchat.send(content + functions + off_auto, user_name)
+        if AUTO_REPLAY:
+            itchat.send(content + functions + off_auto, user_name)
         autoReplyFlag = True
         timerSet = False
 
@@ -149,9 +150,10 @@ def text_reply(msg):
         # 'Content': '@阿宝\u2005宝宝真棒',
         smart_reply = '小K: ' + get_response(content)
         print(smart_reply)
-        itchat.send(smart_reply, msg['FromUserName'])
+        if AUTO_REPLAY:
+            itchat.send(smart_reply, msg['FromUserName'])
 
-        #  itchat.send(u'@%s\u2005I received: %s' % (msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+            #  itchat.send(u'@%s\u2005I received: %s' % (msg['ActualNickName'], msg['Content']), msg['FromUserName'])
 
 
 # {msg_id:(msg_from,msg_to,msg_time,msg_time_touser,msg_type,msg_content,msg_url,msg_from_user_name)}
@@ -229,7 +231,8 @@ def revocation(msg):
                 reply = get_response(wx_msg_text)
                 # a or b的意思是，如果a有内容，那么返回a，否则返回b
                 # 有内容一般就是指非空或者非None，你可以用`if a: print('True')`来测试
-                return '小K: ' + reply or '小K: ' + default_reply
+                if AUTO_REPLAY:
+                    return '小K: ' + reply or '小K: ' + default_reply
         else:
             noReply = True
             if not timerSet:
@@ -279,8 +282,9 @@ def revocation(msg):
     #             toUserName='filehelper')
 
     if msg['Type'] != 'Text':
-        itchat.send("小K已收到您的消息,主人稍后回复!\n\t时间: %s\n\t内容: %s" % (msg_time_touser, msg_content),
-                    toUserName=msg['FromUserName'])
+        if AUTO_REPLAY:
+            itchat.send("小K已收到您的消息,主人稍后回复!\n\t时间: %s\n\t内容: %s" % (msg_time_touser, msg_content),
+                        toUserName=msg['FromUserName'])
 
     # 更新字典
     # {msg_id:(msg_from,msg_time,msg_time_touser,msg_type,msg_content,msg_url)}
@@ -322,9 +326,9 @@ def save_msg(msg):
         # print('************' + old_msg['msg_content'])
 
         itchat.send(msg_send, toUserName='filehelper')  # 将撤回消息的通知以及细节发送到文件助手
-
-        itchat.send('小K : 还想撤回 ? too naive!!! 消息已经保存存啦' + r'[偷笑]',
-                    toUserName=old_msg.get('msg_from_user_name'))  # 将撤回消息的通知以及细节发送到文件助手
+        if AUTO_REPLAY:
+            itchat.send('小K : 还想撤回 ? too naive!!! 消息已经保存存啦' + r'[偷笑]',
+                        toUserName=old_msg.get('msg_from_user_name'))  # 将撤回消息的通知以及细节发送到文件助手
         try:
             shutil.move(old_msg['msg_content'], "Revocation")
         except FileNotFoundError:
